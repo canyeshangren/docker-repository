@@ -49,6 +49,8 @@ jobs:
           gh release create "$tag" --title "Docker Images $tag" --notes "Auto-uploaded Docker image tarballs"
 
       - name: Upload each tar file to Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for file in saved/*.tar; do
             echo "Uploading $file to release $TAG_NAME"
