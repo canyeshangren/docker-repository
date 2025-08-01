@@ -1,1 +1,2 @@
-
+gitea/gitea:latest
+gitea/act_runner:latest
