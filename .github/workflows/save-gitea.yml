@@ -1,34 +1,49 @@
-name: Save Docker Images
+name: Save and Release Docker Images
 
 on:
   push:
     paths:
-      - 'images.txt'   # 只在 images.txt 改动时触发
-  workflow_dispatch:    # 也支持手动触发
+      - 'images.txt'
+  workflow_dispatch:
 
 jobs:
   save:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Read image list and pull
-        id: save_images
+      - name: Prepare saved directory
+        run: mkdir saved
+
+      - name: Get changed images
+        id: diff
         run: |
-          mkdir saved
+          git fetch origin HEAD^
+          diff_lines=$(git diff HEAD^ -- images.txt | grep '^+' | grep -v '^+++' | cut -c 2-)
+          echo "$diff_lines" > changed_images.txt
+          cat changed_images.txt
+
+      - name: Pull and Save changed images
+        run: |
           while read -r image; do
             [ -z "$image" ] && continue
             echo "Pulling $image"
             docker pull "$image"
-
-            # 替换特殊字符用于 tar 文件名
             safe_name=$(echo "$image" | sed 's/[/:]/_/g')
             docker save "$image" -o "saved/${safe_name}.tar"
-          done < images.txt
+          done < changed_images.txt
 
-      - name: Upload all images as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-images
-          path: saved/
+      - name: Create GitHub Release (if not exists)
+        run: |
+          tag="docker-images-$(date +%Y%m%d%H%M%S)"
+          echo "TAG_NAME=$tag" >> $GITHUB_ENV
+          gh release create "$tag" --title "Docker Images $tag" --notes "Auto-uploaded Docker image tarballs"
+
+      - name: Upload each tar file to Release
+        run: |
+          for file in saved/*.tar; do
+            echo "Uploading $file to release $TAG_NAME"
+            gh release upload "$TAG_NAME" "$file" --clobber
+          done
