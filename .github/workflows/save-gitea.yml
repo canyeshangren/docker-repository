@@ -1,0 +1,34 @@
+name: Save Docker Images
+
+on:
+  push:
+    paths:
+      - 'images.txt'   # 只在 images.txt 改动时触发
+  workflow_dispatch:    # 也支持手动触发
+
+jobs:
+  save:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read image list and pull
+        id: save_images
+        run: |
+          mkdir saved
+          while read -r image; do
+            [ -z "$image" ] && continue
+            echo "Pulling $image"
+            docker pull "$image"
+
+            # 替换特殊字符用于 tar 文件名
+            safe_name=$(echo "$image" | sed 's/[/:]/_/g')
+            docker save "$image" -o "saved/${safe_name}.tar"
+          done < images.txt
+
+      - name: Upload all images as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-images
+          path: saved/
