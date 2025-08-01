@@ -41,6 +41,8 @@ jobs:
           done < changed_images.txt
 
       - name: Create GitHub Release (if not exists)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="docker-images-$(date +%Y%m%d%H%M%S)"
           echo "TAG_NAME=$tag" >> $GITHUB_ENV
