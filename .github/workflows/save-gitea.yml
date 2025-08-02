@@ -19,17 +19,30 @@ jobs:
           fetch-depth: 0
           
       - name: Prepare saved directory
-        run: mkdir saved
+        run: mkdir savedd
       
-      - name: Get changed images
+      - name: Check if workflow updated
         run: |
           git fetch origin
           BASE=$(git rev-parse HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
-          echo "Comparing with base commit: $BASE"
-          diff_lines=$(git diff "$BASE" -- images.txt | grep '^+' | grep -v '^+++' | cut -c 2-)
-          echo "$diff_lines" > changed_images.txt
+          echo "BASE=$BASE" >> $GITHUB_ENV
+          if git diff --name-only "$BASE" | grep '^.github/workflows/'; then
+            echo "workflow_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "workflow_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get changed images (or full list)
+        run: |
+          if [ "${{ steps.check_workflow_change.outputs.workflow_changed }}" = "true" ]; then
+            echo "Workflow changed. Force using all images."
+            cp images.txt changed_images.txt
+          else
+            diff_lines=$(git diff "$BASE" -- images.txt | grep '^+' | grep -v '^+++' | cut -c 2-)
+            echo "$diff_lines" > changed_images.txt
+          fi
           cat changed_images.txt
-      
+    
       - name: Pull and Save changed images
         run: |
           while read -r image; do
@@ -44,9 +57,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tag="docker-images-$(date +%Y%m%d%H%M%S)"
+          tag="docker-images"
+          # 检查 release 是否存在
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "Release $tag already exists. Skipping creation."
+          else
+            gh release create "$tag" --title "Docker Images" --notes "Auto-uploaded Docker image tarballs"
+          fi
           echo "TAG_NAME=$tag" >> $GITHUB_ENV
-          gh release create "$tag" --title "Docker Images $tag" --notes "Auto-uploaded Docker image tarballs"
 
       - name: Upload each tar file to Release
         env:
