@@ -1,2 +1,3 @@
 gitea/gitea:latest
 gitea/act_runner:latest
+fredliang/derper:latest
