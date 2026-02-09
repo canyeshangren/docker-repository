@@ -1,0 +1,5 @@
+# 用途
+虽然配置了docker镜像源，但有时候有些docker镜像还是无法下载，可以借助github平台的自动化action流程来帮我们下载相应文件，并打包成release发布，便于我们下载
+
+# 使用方法
+只需要往image.txt里添加想要的docker镜像名即可，检测到这个文件变动会自动打包重新发布release
