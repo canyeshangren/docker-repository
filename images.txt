@@ -2,3 +2,8 @@ gitea/gitea:latest
 gitea/act_runner:latest
 fredliang/derper:latest
 qdrant/qdrant:latest
+vaalacat/frp-panel:latest
+uozi/nginx-ui:latest
+vaultwarden/server:latest
+filebrowser/filebrowser:latest
+fredliang/derper:latest
