@@ -7,3 +7,6 @@ uozi/nginx-ui:latest
 vaultwarden/server:latest
 filebrowser/filebrowser:latest
 fredliang/derper:latest
+pawelmalak/flame:latest
+xhofe/alist:latest
+shlinkio/shlink:latest
