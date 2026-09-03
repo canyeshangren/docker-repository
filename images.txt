@@ -11,3 +11,4 @@ pawelmalak/flame:latest
 xhofe/alist:latest
 shlinkio/shlink:latest
 eclipse-temurin:17-jre-focal
+anderpuqing/mindustry:stable
